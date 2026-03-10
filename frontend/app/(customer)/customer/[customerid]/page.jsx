@@ -1,9 +1,14 @@
 import React from 'react'
 
-function page({params}) {
+function Page({ params }) {
+  const id = params.customerid;
+
   return (
-    <div>page</div>
+    <div>
+      <h1>Customer Page</h1>
+      <p>ID: {id}</p>
+    </div>
   )
 }
 
-export default page
+export default Page
