@@ -1,20 +1,11 @@
 "use client";
 
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from '@clerk/nextjs'
-import Image from "next/image";
 import { useState, useEffect } from "react";
-import { useUser } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
-import React from "react";
-import logo from "@/assets/transparentlogo.png";
 import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import logo from "@/assets/transparentlogo.png";
 
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -27,14 +18,19 @@ function Navbar() {
     }
   }, [isSignedIn, router]);
   return (
-    <nav className="absolute top-10 left-0 w-full z-50 px-5 flex justify-between items-center text-white">
-      {/* logo */}
-      <Link href="/" className="flex items-center">
+    <nav className={`fixed top-0 left-0 w-full z-50 px-6 md:px-10 h-16 flex justify-between items-center transition-all duration-300 ${
+      scrolled || !isHero
+        ? "bg-[#0a0a0f]/90 backdrop-blur-md border-b border-white/[0.07] shadow-lg"
+        : "bg-transparent"
+    }`}>
+
+      {/* Logo */}
+      <Link href="/" className="flex items-center shrink-0">
         <Image
           src={logo}
-          alt="MyApp Logo"
-          width={140}
-          height={40}
+          alt="100ACRES"
+          width={120}
+          height={38}
           className="object-contain"
           priority
         />
@@ -67,6 +63,7 @@ function Navbar() {
           )
         }
       </div>
+
     </nav>
   );
 }
