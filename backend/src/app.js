@@ -3,6 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express'
 import mongoose from "mongoose";
+import userRoute from "./router/userRoute.js";
+import {User} from "./model/user.Schema.js";
+import { Webhook } from "svix";
 
 dotenv.config();
 
@@ -14,6 +17,47 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected Successfully"))
   .catch((err) => console.log("MongoDB Connection Error:", err));
 
+
+app.post(
+  "/api/webhooks/clerk",
+  express.raw({ type: "application/json" }),
+   async (req, res) => {
+  try {
+    console.log("Received Clerk webhook");
+    const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
+
+    const evt = wh.verify(
+      req.body,
+      {
+        "svix-id": req.headers["svix-id"],
+        "svix-timestamp": req.headers["svix-timestamp"],
+        "svix-signature": req.headers["svix-signature"]
+      }
+    );
+
+    const { type, data } = evt;
+
+    if (type === "user.deleted") {
+
+      const clerkId = data.id;
+
+      await User.findOneAndDelete({ clerkId });
+
+      console.log("User deleted from database");
+
+    }
+
+    res.status(200).json({ success: true });
+
+  } catch (error) {
+
+    console.error("Webhook error:", error);
+
+    res.status(400).json({ error: "Webhook verification failed" });
+
+  }
+}
+);
 // Middleware
 app.use(express.json());
 app.use(clerkMiddleware())
@@ -29,6 +73,7 @@ app.use(cors(
 app.get("/", (req, res) => {
     res.send("Hello from the backend!");
 });
+app.use("/api/users", userRoute);
 
 app.get('/protected', requireAuth(), async (req, res) => {
   // Use `getAuth()` to get the user's `userId`

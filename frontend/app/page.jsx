@@ -40,14 +40,6 @@ function Page() {
       </div>
 
       </div>
-      <main className="">
-        <SignedIn>
-          <div className="flex items-center gap-4">
-            <UserButton />
-            <p>Hello {user?.firstName}!</p>
-          </div>
-        </SignedIn>
-      </main>
     </>
   );
 }
