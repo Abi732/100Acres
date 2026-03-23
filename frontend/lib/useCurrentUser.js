@@ -1,7 +1,4 @@
 // frontend/lib/useCurrentUser.js
-// Fetches the current user's role from your backend (MongoDB)
-// Returns: { dbUser, role, loading, error, needsOnboarding }
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -17,14 +14,8 @@ export function useCurrentUser() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   useEffect(() => {
-    // wait for Clerk to finish loading
     if (!isLoaded) return;
-
-    // not signed in — nothing to fetch
-    if (!isSignedIn) {
-      setLoading(false);
-      return;
-    }
+    if (!isSignedIn) { setLoading(false); return; }
 
     const fetchUser = async () => {
       try {
@@ -33,25 +24,28 @@ export function useCurrentUser() {
 
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/users/me`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         const data = await res.json();
 
+        if (res.status === 404 && data.needsOnboarding) {
+          // ✅ Only a real 404 with needsOnboarding flag means they need onboarding
+          setNeedsOnboarding(true);
+          return;
+        }
+
         if (!res.ok) {
-          if (data.needsOnboarding) {
-            setNeedsOnboarding(true);
-          } else {
-            setError(data.message || "Failed to fetch user");
-          }
+          // Network error or server error — do NOT send to onboarding
+          // just set error and keep whatever state we have
+          setError(data.message || "Failed to fetch user");
           return;
         }
 
         setDbUser(data.user);
         setNeedsOnboarding(false);
       } catch (err) {
+        // Network completely down — do NOT send to onboarding
         setError(err.message);
       } finally {
         setLoading(false);
@@ -61,21 +55,14 @@ export function useCurrentUser() {
     fetchUser();
   }, [isLoaded, isSignedIn, getToken]);
 
-  return {
-    dbUser,
-    role:           dbUser?.role ?? null,    // "buyer" | "owner" | "agent" | "admin"
-    loading,
-    error,
-    needsOnboarding,
-  };
+  return { dbUser, role: dbUser?.role ?? null, loading, error, needsOnboarding };
 }
 
-// Role → dashboard path mapping
 export const ROLE_DASHBOARD = {
-  buyer: "/dashboard/buyer",
-  owner: "/dashboard/owner",
-  agent: "/dashboard/agent",
-  admin: "/dashboard/admin",
+  buyer:  "/customer",
+  owner:  "/owner",
+  broker: "/broker/broker",
+  admin:  "/admin",
 };
 
 export function getDashboardPath(role) {

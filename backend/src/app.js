@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import userRoute from "./router/userRoute.js";
 import {User} from "./model/user.Schema.js";
 import { Webhook } from "svix";
+// import propertyRoute from "./router/propertyRoute.js";
 
 dotenv.config();
 
@@ -85,6 +86,8 @@ app.get('/protected', requireAuth(), async (req, res) => {
 
   return res.json({ user })
 })
+
+// app.use("/api/properties", propertyRoute);
 
 // Start the server
 app.listen(PORT, () => {
