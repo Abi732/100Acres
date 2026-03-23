@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
 
     role: {
         type: String,
-        enum: ["buyer", "seller", "agent", "admin"],
+        enum: ["buyer", "owner", "agent", "admin"],
         default: "buyer"
     },
 
